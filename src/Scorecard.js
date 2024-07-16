@@ -1,5 +1,5 @@
 class Scorecard {
-    
+
     constructor() {
         this._current_score = 0; 
         this._list_of_frames = [];   
@@ -13,38 +13,117 @@ class Scorecard {
         return this._list_of_frames.length;
     }
 
-    getFinalScore() {
-        let running_total = 0;
 
-        // Go through the list of frames (maximum of 10) and return the final score.
-        // Useful reference : https://www.geeksforgeeks.org/how-to-loop-through-an-array-containing-multiple-objects-and-access-their-properties-in-javascript/
-
-        return 80;
+    _isStrike(frame) {
+        if (frame.score_one == 10) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
-    // TODO - Check if either of these is a strike(10)
+    _isSpare(frame) {
+        if ((frame.score_one + frame.score_two) == 10) {
+            return true;           
+        }
+        else {
+            return false;
+        }
+    }
 
+
+    getFrameScore(frame) {
+        return (frame.score_one + frame.score_two);
+    }
+
+
+    getFinalScore() {
+
+        // Useful reference : https://www.geeksforgeeks.org/how-to-loop-through-an-array-containing-multiple-objects-and-access-their-properties-in-javascript/
+        let game_total = 0;
+        let loop_counter = 0;
+        const LAST_NORMAL_ROUND = 10;
+        
+        this._list_of_frames.forEach(thisFrame => {
+            
+            loop_counter ++;
+            process.stdout.write("Loop : " + loop_counter + ' : ')
+            
+            // Add the scores for this frame.
+            game_total += this.getFrameScore(thisFrame);
+
+            if (loop_counter < LAST_NORMAL_ROUND) {
+                process.stdout.write("Check for bonus");
+                
+                // Grab the next frame if we need it. We'll check for boundary conditions later on in the undefined object.
+                let next_frame = this._list_of_frames[loop_counter];
+
+                // Count the next two scores and add as a bonus mark (unless the last round)
+                if (this._isStrike(thisFrame)) {
+                    
+                    if (typeof next_frame !== "undefined") {
+                        // game_total = game_total + next_frame.score_one; // Caused a NaN ERROR
+                        game_total += next_frame.score_one;
+                        game_total += next_frame.score_two;
+                        process.stdout.write(" : Strike bonus awarded ");
+
+                        // If this next_frame is a strike, then we need to add the next one too!
+                        if (next_frame.score_one == 10 && (loop_counter <= LAST_NORMAL_ROUND-1)) {
+                            // This a strike too!
+                            let further_frame = this._list_of_frames[loop_counter+2];
+                            if (typeof further_frame !== "undefined") {
+                                game_total += further_frame.score_one;
+                                game_total += further_frame.score_two;
+                                process.stdout.write(" : Strike bonus awarded ");
+                            }
+                        }
+                    }
+                    
+                } else {
+                    // If this is not a STRIKE, then check for a SPARE.
+
+                    if (this._isSpare(thisFrame)) {
+                        // This is a SPARE. so the next frame score is added as bonus mark.
+                        process.stdout.write(" : Spare!");
+                        // Get the next frame scores and add to the total (if not the last frames.)
+                        // Check if this is the last entry in the array, if so, don't retrieve the next score. This is a bonus roll and there will not be another frame waiting to be scored.
+                        //if (this.getNumberofFrames >= loop_counter) {
+                        if (typeof next_frame !== 'undefined') {
+                            game_total = game_total + next_frame.score_one; // Caused a NaN ERROR
+                            process.stdout.write(" : Spare bonus awarded ");
+                        }
+
+                    }
+                }
+            }
+
+            console.log(" : " + game_total);
+            
+        })
+
+        return game_total;
+    }
     
 
     addFrame(score1, score2) {
-    
-        // TODO Confirm that no more than 10 frames are used, else the score will reset.
-
 
         // Perform some validation
         if ((score1 + score2) > 10) {
             throw new Error("You cannot score more than 10 with two throws");
         } else {
-            if ((!score1) || (!score2)) {
-                throw new Error("One of the scores has not been defined")
+            if (Number.isInteger(score1) && Number.isInteger(score2)) {
+                this._current_score = this._current_score + score1 + score2;    
             }
             else {
-                this._current_score = this._current_score + score1 + score2;
+                throw new Error("One of the scores has not been defined");
             }
             
         }
+
         // The scores are valid to store in the array for scores for the final calculation.
-        const this_frame = {score1, score2};
+        // Make up the javascript object with these two attributes.
+        const this_frame = {score_one : score1, score_two : score2};
         this._list_of_frames.push(this_frame);
     }
 } 
