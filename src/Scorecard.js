@@ -54,27 +54,23 @@ class Scorecard {
             game_total += this.getFrameScore(thisFrame);
 
             if (loop_counter < LAST_NORMAL_ROUND) {
-                process.stdout.write("Check for bonus");
+                // Check for bonus.
                 
-                // Grab the next frame if we need it. We'll check for boundary conditions later on in the undefined object.
+                // Grab the next frame if we need it. We'll check for boundary conditions later on for the undefined object.
                 let next_frame = this._list_of_frames[loop_counter];
 
                 // Count the next two scores and add as a bonus mark (unless the last round)
                 if (this._isStrike(thisFrame)) {
                     
                     if (typeof next_frame !== "undefined") {
-                        // game_total = game_total + next_frame.score_one; // Caused a NaN ERROR
-                        game_total += next_frame.score_one;
-                        game_total += next_frame.score_two;
+                        game_total += this.getFrameScore(next_frame);
                         process.stdout.write(" : Strike bonus awarded ");
 
-                        // If this next_frame is a strike, then we need to add the next one too!
+                        // If this next_frame is a strike too, then we need to add the next one too!
                         if (next_frame.score_one == 10 && (loop_counter <= LAST_NORMAL_ROUND-1)) {
-                            // This a strike too!
                             let further_frame = this._list_of_frames[loop_counter+2];
                             if (typeof further_frame !== "undefined") {
-                                game_total += further_frame.score_one;
-                                game_total += further_frame.score_two;
+                                game_total += this.getFrameScore(further_frame);
                                 process.stdout.write(" : Strike bonus awarded ");
                             }
                         }
@@ -85,10 +81,8 @@ class Scorecard {
 
                     if (this._isSpare(thisFrame)) {
                         // This is a SPARE. so the next frame score is added as bonus mark.
-                        process.stdout.write(" : Spare!");
                         // Get the next frame scores and add to the total (if not the last frames.)
                         // Check if this is the last entry in the array, if so, don't retrieve the next score. This is a bonus roll and there will not be another frame waiting to be scored.
-                        //if (this.getNumberofFrames >= loop_counter) {
                         if (typeof next_frame !== 'undefined') {
                             game_total = game_total + next_frame.score_one; // Caused a NaN ERROR
                             process.stdout.write(" : Spare bonus awarded ");
@@ -97,18 +91,17 @@ class Scorecard {
                     }
                 }
             }
-
             console.log(" : " + game_total);
             
         })
-
         return game_total;
     }
     
 
     addFrame(score1, score2) {
 
-        // Perform some validation
+        // Perform some basic validation.
+
         if ((score1 + score2) > 10) {
             throw new Error("You cannot score more than 10 with two throws");
         } else {
@@ -120,7 +113,6 @@ class Scorecard {
             }
             
         }
-
         // The scores are valid to store in the array for scores for the final calculation.
         // Make up the javascript object with these two attributes.
         const this_frame = {score_one : score1, score_two : score2};
